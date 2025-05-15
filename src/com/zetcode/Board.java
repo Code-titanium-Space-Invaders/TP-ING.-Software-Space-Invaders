@@ -65,8 +65,8 @@ public class Board extends JPanel {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 6; j++) {
 
-                var alien = new Alien(Commons.ALIEN_INIT_X + 18 * j,
-                        Commons.ALIEN_INIT_Y + 18 * i);
+                var alien = new Alien(Commons.ALIEN_INIT_X + 25 * j,
+                        Commons.ALIEN_INIT_Y + 30 * i);
                 aliens.add(alien);
             }
         }
@@ -219,7 +219,7 @@ public class Board extends JPanel {
             }
 
             int y = shot.getY();
-            y -= 4;
+            y -= 7;
 
             if (y < 0) {
                 shot.die();
