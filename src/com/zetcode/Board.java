@@ -28,7 +28,7 @@ public class Board extends JPanel {
     private int deaths = 0;
 
     private boolean inGame = true;
-    private String explImg = "src/images/explosion.png";
+    private String explImg = "src/images/explosion1.png";
     private String message = "Game Over";
     private Image backgroundImage ;
     private Timer timer;

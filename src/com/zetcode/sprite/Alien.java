@@ -50,7 +50,7 @@ public class Alien extends Sprite {
             this.x = x;
             this.y = y;
 
-            var bombImg = "src/images/bomb.png";
+            var bombImg = "src/images/bomb1.png";
             var ii = new ImageIcon(bombImg);
             setImage(ii.getImage());
         }
