@@ -79,6 +79,7 @@ public class Player extends Sprite {
         if (key == KeyEvent.VK_LEFT) {
 
             dx = 0;
+            setImage(neutro);
         }
 
         if (key == KeyEvent.VK_RIGHT) {
