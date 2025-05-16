@@ -7,11 +7,7 @@ import com.zetcode.sprite.Shot;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -34,7 +30,7 @@ public class Board extends JPanel {
     private boolean inGame = true;
     private String explImg = "src/images/explosion.png";
     private String message = "Game Over";
-
+    private Image backgroundImage ;
     private Timer timer;
 
 
@@ -42,6 +38,11 @@ public class Board extends JPanel {
 
         initBoard();
         gameInit();
+        loadBackGroundImage();
+    }
+    private void loadBackGroundImage() {
+        var ii = new ImageIcon("src/images/board2.png");
+        backgroundImage = ii.getImage();
     }
 
     private void initBoard() {
@@ -133,10 +134,16 @@ public class Board extends JPanel {
         doDrawing(g);
     }
 
-    private void doDrawing(Graphics g) {
 
-        g.setColor(Color.black);
-        g.fillRect(0, 0, d.width, d.height);
+    private void doDrawing(Graphics g) {
+        // Dibujar la imagen de fondo
+        if (backgroundImage != null) {
+            g.drawImage(backgroundImage, 0, 0, d.width, d.height, this);
+        } else {
+            g.setColor(Color.black);
+            g.fillRect(0, 0, d.width, d.height);
+        }
+
         g.setColor(Color.green);
 
         if (inGame) {
@@ -160,6 +167,7 @@ public class Board extends JPanel {
 
         Toolkit.getDefaultToolkit().sync();
     }
+
 
     private void gameOver(Graphics g) {
 
