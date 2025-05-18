@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import javax.swing.JButton;
 
 public class Board extends JPanel {
 
@@ -23,9 +24,13 @@ public class Board extends JPanel {
     private List<Alien> aliens;
     private Player player;
     private Shot shot;
+    private JButton restartButton;
     
     private int direction = -1;
     private int deaths = 0;
+    private int Waves = 2;
+    private int currentWave = 1;
+    private int AlienPerWave = 6;
 
     private boolean inGame = true;
     private String explImg = "src/images/explosion1.png";
@@ -39,6 +44,7 @@ public class Board extends JPanel {
         initBoard();
         gameInit();
         loadBackGroundImage();
+        createRestartButton();
     }
     private void loadBackGroundImage() {
         var ii = new ImageIcon("src/images/board2.png");
@@ -62,20 +68,23 @@ public class Board extends JPanel {
     private void gameInit() {
 
         aliens = new ArrayList<>();
+        spawnWave();
+        player = new Player();
+        shot = new Shot();
+    }
 
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 6; j++) {
-
+    private void spawnWave() {
+        aliens.clear();
+        for (int i = 0; i < Commons.NUMBER_OF_ALIENS_TO_DESTROY; i++) {
+            for (int j = 0; j < 3; j++) {
                 var alien = new Alien(Commons.ALIEN_INIT_X + 25 * j,
                         Commons.ALIEN_INIT_Y + 30 * i);
                 aliens.add(alien);
             }
         }
-
-        player = new Player();
-        shot = new Shot();
+       // player = new Player();
+       // shot = new Shot();
     }
-
     private void drawAliens(Graphics g) {
 
         for (Alien alien : aliens) {
@@ -126,6 +135,24 @@ public class Board extends JPanel {
             }
         }
     }
+    private void createRestartButton() {
+        restartButton = new JButton("Restart");
+        restartButton.setBounds(Commons.BOARD_WIDTH/2 - 100, Commons.BOARD_HEIGHT/2 + 100, 200, 40);
+        restartButton.setVisible(false);
+        restartButton.addActionListener( e->restartGame());
+        add(restartButton);
+        //(Commons.BOARD_WIDTH - fontMetrics.stringWidth(message)) / 2,
+        //        Commons.BOARD_HEIGHT/2 + fontMetrics.getHeight()/4);
+    }
+    private void restartGame() {
+        inGame = true;
+        deaths = 0;
+        currentWave = 1;
+        gameInit();
+        timer.start();
+        restartButton.setVisible(false);
+
+    }
 
     @Override
     public void paintComponent(Graphics g) {
@@ -171,33 +198,49 @@ public class Board extends JPanel {
 
     private void gameOver(Graphics g) {
 
+        g.setColor(new Color(195,196,195));
+        g.fillRect(Commons.BOARD_WIDTH/2-200, Commons.BOARD_HEIGHT/2-100, 400, 200);
+
+        g.setColor(new Color(60, 144, 83));
+        g.fillRect(Commons.BOARD_WIDTH/2-180, Commons.BOARD_HEIGHT / 2 - 80, 360, 160);
         g.setColor(Color.black);
-        g.fillRect(0, 0, Commons.BOARD_WIDTH, Commons.BOARD_HEIGHT);
+        g.drawRect(Commons.BOARD_WIDTH/2-180, Commons.BOARD_HEIGHT / 2 - 80, 360, 160);
 
-        g.setColor(new Color(0, 32, 48));
-        g.fillRect(50, Commons.BOARD_WIDTH / 2 - 30, Commons.BOARD_WIDTH - 100, 50);
-        g.setColor(Color.white);
-        g.drawRect(50, Commons.BOARD_WIDTH / 2 - 30, Commons.BOARD_WIDTH - 100, 50);
-
-        var small = new Font("Helvetica", Font.BOLD, 14);
+        var small = new Font("Tahoma", Font.BOLD, 40);
         var fontMetrics = this.getFontMetrics(small);
 
-        g.setColor(Color.white);
+        g.setColor(Color.black);
         g.setFont(small);
-        g.drawString(message, (Commons.BOARD_WIDTH - fontMetrics.stringWidth(message)) / 2,
-                Commons.BOARD_WIDTH / 2);
+        g.drawString(message,
+                (Commons.BOARD_WIDTH - fontMetrics.stringWidth(message)) / 2,
+                Commons.BOARD_HEIGHT/2 + fontMetrics.getHeight()/4);
+        restartButton.setVisible(true);
     }
 
     private void update() {
 
-        if (deaths == Commons.NUMBER_OF_ALIENS_TO_DESTROY) {
+     //   if (deaths == Commons.NUMBER_OF_ALIENS_TO_DESTROY) {
 
-            inGame = false;
-            timer.stop();
-            message = "Game won!";
-        }
+    //        inGame = false;
+     //       timer.stop();
+    //        message = "Game won!";
+      //  }
 
         // player
+        if(deaths == AlienPerWave){
+            if(currentWave < Waves){
+                currentWave++;
+                spawnWave();
+                deaths = 0;
+            }
+            else{
+                inGame = false;
+                timer.stop();
+                message = "Game won!";
+                restartButton.setVisible(true);
+            }
+        }
+
         player.act();
 
         // shot

@@ -33,7 +33,7 @@ public class Alien extends Sprite {
 
         return bomb;
     }
-
+//clase bomba usada solo por el alien
     public class Bomb extends Sprite {
 
         private boolean destroyed;
