@@ -3,6 +3,8 @@ package com.zetcode;
 import com.zetcode.sprite.Alien;
 import com.zetcode.sprite.Player;
 import com.zetcode.sprite.Shot;
+import com.zetcode.powerup.PowerUp;
+import com.zetcode.powerup.PowerUpType;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -25,12 +27,15 @@ public class Board extends JPanel {
     private Player player;
     private Shot shot;
     private JButton restartButton;
-    
+
     private int direction = -1;
     private int deaths = 0;
     private int Waves = 2;
     private int currentWave = 1;
     private int AlienPerWave = 6;
+    private int shieldKillCount = 0;
+    private PowerUp shieldPowerUp;
+    private boolean shieldPowerUpActive = false;
 
     private boolean inGame = true;
     private String explImg = "src/images/explosion1.png";
@@ -82,8 +87,8 @@ public class Board extends JPanel {
                 aliens.add(alien);
             }
         }
-       // player = new Player();
-       // shot = new Shot();
+        // player = new Player();
+        // shot = new Shot();
     }
     private void drawAliens(Graphics g) {
 
@@ -106,6 +111,15 @@ public class Board extends JPanel {
         if (player.isVisible()) {
 
             g.drawImage(player.getImage(), player.getX(), player.getY(), this);
+
+            if (player.hasShield()) {
+                g.drawImage(player.getShieldImage(),
+                        player.getX() - 10,
+                        player.getY() - 10,
+                        player.getImage().getWidth(null) + 20,
+                        player.getImage().getHeight(null) + 20,
+                        this);
+            }
         }
 
         if (player.isDying()) {
@@ -182,6 +196,7 @@ public class Board extends JPanel {
             drawPlayer(g);
             drawShot(g);
             drawBombing(g);
+            drawPowerUps(g);
 
         } else {
 
@@ -219,12 +234,12 @@ public class Board extends JPanel {
 
     private void update() {
 
-     //   if (deaths == Commons.NUMBER_OF_ALIENS_TO_DESTROY) {
+        //   if (deaths == Commons.NUMBER_OF_ALIENS_TO_DESTROY) {
 
-    //        inGame = false;
-     //       timer.stop();
-    //        message = "Game won!";
-      //  }
+        //        inGame = false;
+        //       timer.stop();
+        //        message = "Game won!";
+        //  }
 
         // player
         if(deaths == AlienPerWave){
@@ -233,6 +248,7 @@ public class Board extends JPanel {
                 spawnWave();
                 deaths = 0;
             }
+
             else{
                 inGame = false;
                 timer.stop();
@@ -245,12 +261,10 @@ public class Board extends JPanel {
 
         // shot
         if (shot.isVisible()) {
-
             int shotX = shot.getX();
             int shotY = shot.getY();
 
             for (Alien alien : aliens) {
-
                 int alienX = alien.getX();
                 int alienY = alien.getY();
 
@@ -264,11 +278,22 @@ public class Board extends JPanel {
                         alien.setImage(ii.getImage());
                         alien.setDying(true);
                         deaths++;
+                        shieldKillCount++;
+
+                        // Generar power-up de escudo cada 4 kills
+                        if (shieldKillCount >= 4) {
+                            System.out.println("Generando power-up de escudo en: " + alienX + ", " + alienY);
+                            shieldPowerUp = new PowerUp(PowerUpType.SHIELD, alienX, alienY);
+                            shieldPowerUpActive = true;
+                            shieldKillCount = 0;
+                        }
+
                         shot.die();
                     }
                 }
             }
 
+            // Restaurar la lógica del disparo
             int y = shot.getY();
             y -= 7;
 
@@ -276,6 +301,35 @@ public class Board extends JPanel {
                 shot.die();
             } else {
                 shot.setY(y);
+            }
+        }
+
+        // Actualizar power-up de escudo
+        if (shieldPowerUpActive && shieldPowerUp != null && shieldPowerUp.isVisible()) {
+            shieldPowerUp.move();
+
+            // Verificar colisión con el jugador
+            int powerUpX = shieldPowerUp.getX();
+            int powerUpY = shieldPowerUp.getY();
+            int playerX = player.getX();
+            int playerY = player.getY();
+
+            if (powerUpX >= (playerX)
+                    && powerUpX <= (playerX + Commons.PLAYER_WIDTH)
+                    && powerUpY >= (playerY)
+                    && powerUpY <= (playerY + Commons.PLAYER_HEIGHT)) {
+
+                System.out.println("Power-up recogido");
+                player.setShield(true);
+                shieldPowerUp.setVisible(false);
+                shieldPowerUpActive = false;
+            }
+
+            // Desactivar si sale de la pantalla
+            if (powerUpY > Commons.GROUND) {
+                System.out.println("Power-up fuera de pantalla");
+                shieldPowerUp.setVisible(false);
+                shieldPowerUpActive = false;
             }
         }
 
@@ -325,6 +379,7 @@ public class Board extends JPanel {
                 if (y > Commons.GROUND - Commons.ALIEN_HEIGHT) {
                     inGame = false;
                     message = "Invasion!";
+                    restartButton.setVisible(true);
                 }
 
                 alien.act(direction);
@@ -358,9 +413,13 @@ public class Board extends JPanel {
                         && bombY >= (playerY)
                         && bombY <= (playerY + Commons.PLAYER_HEIGHT)) {
 
-                    var ii = new ImageIcon(explImg);
-                    player.setImage(ii.getImage());
-                    player.setDying(true);
+                    if (player.hasShield()) {
+                        player.setShield(false);
+                    } else {
+                        var ii = new ImageIcon(explImg);
+                        player.setImage(ii.getImage());
+                        player.setDying(true);
+                    }
                     bomb.setDestroyed(true);
                 }
             }
@@ -374,6 +433,16 @@ public class Board extends JPanel {
                     bomb.setDestroyed(true);
                 }
             }
+        }
+    }
+
+    private void drawPowerUps(Graphics g) {
+        if (shieldPowerUpActive && shieldPowerUp != null && shieldPowerUp.isVisible()) {
+            System.out.println("Dibujando power-up en: " + shieldPowerUp.getX() + ", " + shieldPowerUp.getY());
+            g.drawImage(shieldPowerUp.getImage(),
+                    shieldPowerUp.getX(),
+                    shieldPowerUp.getY(),
+                    this);
         }
     }
 

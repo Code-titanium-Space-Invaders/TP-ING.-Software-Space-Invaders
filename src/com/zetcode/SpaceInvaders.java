@@ -1,33 +1,24 @@
 package com.zetcode;
 
-import java.awt.EventQueue;
 import javax.swing.JFrame;
 
-public class SpaceInvaders extends JFrame  {
+public class SpaceInvaders extends JFrame {
 
     public SpaceInvaders() {
-
         initUI();
     }
 
     private void initUI() {
-
-        add(new Board());
-
+        add(new MainMenu(this));
         setTitle("Space Invaders");
-        setSize(Commons.BOARD_WIDTH, Commons.BOARD_HEIGHT);
-
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setResizable(false);
+        setSize(Commons.BOARD_WIDTH, Commons.BOARD_HEIGHT);
         setLocationRelativeTo(null);
+        setResizable(false);
     }
 
     public static void main(String[] args) {
-
-        EventQueue.invokeLater(() -> {
-
-            var ex = new SpaceInvaders();
-            ex.setVisible(true);
-        });
+        var ex = new SpaceInvaders();
+        ex.setVisible(true);
     }
 }
