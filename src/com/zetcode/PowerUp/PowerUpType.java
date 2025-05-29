@@ -1,4 +1,4 @@
-package com.zetcode.powerup;
+package com.zetcode.PowerUp;
 
 public enum PowerUpType {
     RAPID_FIRE("Disparo Rápido", 5000), // 5 segundos

@@ -3,8 +3,8 @@ package com.zetcode;
 import com.zetcode.sprite.Alien;
 import com.zetcode.sprite.Player;
 import com.zetcode.sprite.Shot;
-import com.zetcode.powerup.PowerUp;
-import com.zetcode.powerup.PowerUpType;
+import com.zetcode.PowerUp.PowerUp;
+import com.zetcode.PowerUp.PowerUpType;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -34,6 +34,9 @@ public class Board extends JPanel {
     private int currentWave = 1;
     private int AlienPerWave = 6;
     private int shieldKillCount = 0;
+    private int points = 0; // Puntos actuales
+    private static final int MAX_POINTS = 100; // Puntos máximos (100%)
+    private static final int POINTS_PER_KILL = 10; // 10% por cada enemigo
     private PowerUp shieldPowerUp;
     private boolean shieldPowerUpActive = false;
 
@@ -197,6 +200,7 @@ public class Board extends JPanel {
             drawShot(g);
             drawBombing(g);
             drawPowerUps(g);
+            drawPointsBar(g);
 
         } else {
 
@@ -280,10 +284,16 @@ public class Board extends JPanel {
                         deaths++;
                         shieldKillCount++;
 
+                        // Actualizar puntos
+                        points = Math.min(points + POINTS_PER_KILL, MAX_POINTS);
+
                         // Generar power-up de escudo cada 4 kills
                         if (shieldKillCount >= 4) {
                             System.out.println("Generando power-up de escudo en: " + alienX + ", " + alienY);
-                            shieldPowerUp = new PowerUp(PowerUpType.SHIELD, alienX, alienY);
+                            // Ajustar la posición para que aparezca en el centro del alien
+                            int powerUpX = alienX + (Commons.ALIEN_WIDTH / 2);
+                            int powerUpY = alienY + (Commons.ALIEN_HEIGHT / 2);
+                            shieldPowerUp = new PowerUp(PowerUpType.SHIELD, powerUpX, powerUpY);
                             shieldPowerUpActive = true;
                             shieldKillCount = 0;
                         }
@@ -327,7 +337,7 @@ public class Board extends JPanel {
 
             // Desactivar si sale de la pantalla
             if (powerUpY > Commons.GROUND) {
-                System.out.println("Power-up fuera de pantalla");
+              //  System.out.println("Power-up fuera de pantalla");
                 shieldPowerUp.setVisible(false);
                 shieldPowerUpActive = false;
             }
@@ -438,12 +448,33 @@ public class Board extends JPanel {
 
     private void drawPowerUps(Graphics g) {
         if (shieldPowerUpActive && shieldPowerUp != null && shieldPowerUp.isVisible()) {
-            System.out.println("Dibujando power-up en: " + shieldPowerUp.getX() + ", " + shieldPowerUp.getY());
+           // System.out.println("Dibujando power-up en: " + shieldPowerUp.getX() + ", " + shieldPowerUp.getY());
             g.drawImage(shieldPowerUp.getImage(),
                     shieldPowerUp.getX(),
                     shieldPowerUp.getY(),
                     this);
         }
+    }
+
+    private void drawPointsBar(Graphics g) {
+        // Dibujar el fondo de la barra
+        g.setColor(Color.DARK_GRAY);
+        g.fillRect(Commons.BOARD_WIDTH - 210, 20, 200, 20);
+
+        // Dibujar la barra de progreso
+        g.setColor(Color.GREEN);
+        int barWidth = (points * 200) / MAX_POINTS;
+        g.fillRect(Commons.BOARD_WIDTH - 210, 20, barWidth, 20);
+
+        // Dibujar el borde
+        g.setColor(Color.WHITE);
+        g.drawRect(Commons.BOARD_WIDTH - 210, 20, 200, 20);
+
+        // Dibujar el texto de puntos
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 14));
+        String pointsText = points + "%";
+        g.drawString(pointsText, Commons.BOARD_WIDTH - 250, 35);
     }
 
     private void doGameCycle() {
