@@ -5,8 +5,8 @@ import com.zetcode.UI.UI.SpaceInvaders;
 public class GameController {
     private SpaceInvaders game;
 
-    public GameController() {
-        this.game = new SpaceInvaders();
+    public GameController(SpaceInvaders game) {
+        this.game = game;
     }
 
     public void startGame() {

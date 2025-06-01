@@ -1,6 +1,8 @@
 package com.zetcode.UI.UI;
 
 import com.zetcode.UI.Domain.Commons;
+import com.zetcode.UI.Services.GameController;
+import com.zetcode.UI.Services.MenuController;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,11 +11,12 @@ public class MainMenu extends JPanel {
     private JButton startButton;
     private JButton exitButton;
     private JFrame parentFrame;
-    private Board gameBoard;
     private Image backgroundImage;
+    private MenuController menuController;
 
-    public MainMenu(JFrame frame) {
+    public MainMenu(JFrame frame, GameController gameController) {
         this.parentFrame = frame;
+        this.menuController = new MenuController(this,gameController);
         setLayout(null);
         loadBackgroundImage();
         initializeButtons();
@@ -31,7 +34,7 @@ public class MainMenu extends JPanel {
         startButton.setBackground(new Color(60, 144, 83));
         startButton.setForeground(Color.WHITE);
         startButton.setFocusPainted(false);
-        startButton.addActionListener(e -> startGame());
+        startButton.addActionListener(e -> menuController.startNewGame());
 
         // Botón de Salir
         exitButton = new JButton("Salir");
@@ -39,14 +42,13 @@ public class MainMenu extends JPanel {
         exitButton.setBackground(new Color(144, 60, 60));
         exitButton.setForeground(Color.WHITE);
         exitButton.setFocusPainted(false);
-        exitButton.addActionListener(e -> System.exit(0));
+        exitButton.addActionListener(e -> menuController.exitGame());
 
         add(startButton);
         add(exitButton);
     }
 
-    private void startGame() {
-        gameBoard = new Board();
+    public void showGameBoard(Board gameBoard){
         parentFrame.getContentPane().removeAll();
         parentFrame.getContentPane().add(gameBoard);
         parentFrame.revalidate();

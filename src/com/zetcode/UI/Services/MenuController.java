@@ -1,18 +1,20 @@
 package com.zetcode.UI.Services;
 
+import com.zetcode.UI.UI.Board;
 import com.zetcode.UI.UI.MainMenu;
 
 public class MenuController {
     private MainMenu menu;
     private GameController gameController;
 
-    public MenuController(MainMenu menu) {
+    public MenuController(MainMenu menu, GameController gameController) {
         this.menu = menu;
-        this.gameController = new GameController();
+        this.gameController = gameController;
     }
 
     public void startNewGame() {
-        gameController.startGame();
+        Board gameBoard = new Board();
+        menu.showGameBoard(gameBoard);
     }
 
     public void showHighScores() {

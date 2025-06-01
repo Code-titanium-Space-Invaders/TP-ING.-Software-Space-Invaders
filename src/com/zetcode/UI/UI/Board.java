@@ -6,6 +6,7 @@ import com.zetcode.UI.Domain.Player;
 import com.zetcode.UI.Domain.Shot;
 import com.zetcode.UI.Domain.PowerUp.PowerUp;
 import com.zetcode.UI.Domain.PowerUp.PowerUpType;
+import com.zetcode.UI.Services.BoardController;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -16,9 +17,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import javax.swing.JButton;
 
 public class Board extends JPanel {
@@ -28,6 +27,7 @@ public class Board extends JPanel {
     private Player player;
     private Shot shot;
     private JButton restartButton;
+    private BoardController boardController;
 
     private int direction = -1;
     private int deaths = 0;
@@ -49,11 +49,11 @@ public class Board extends JPanel {
 
 
     public Board() {
-
         initBoard();
-        gameInit();
         loadBackGroundImage();
         createRestartButton();
+        this.boardController = new BoardController(this);
+
     }
     private void loadBackGroundImage() {
         var ii = new ImageIcon("src/resources/images/board2.png");
@@ -75,10 +75,10 @@ public class Board extends JPanel {
 
 
     private void gameInit() {
-
         aliens = new ArrayList<>();
         spawnWave();
-        player = new Player();
+        player = Player.getInstance();
+        player.reset();
         shot = new Shot();
     }
 
@@ -91,9 +91,28 @@ public class Board extends JPanel {
                 aliens.add(alien);
             }
         }
-        // player = new Player();
-        // shot = new Shot();
     }
+
+    public Player getPlayer(){
+        return player;
+    }
+
+    public Shot getShot(){
+        return shot;
+    }
+
+    public void setShot(Shot shot){
+        this.shot = shot;
+    }
+
+    public boolean isInGame() {
+        return inGame;
+    }
+
+    public List<Alien> getAliens(){
+        return aliens;
+    }
+
     private void drawAliens(Graphics g) {
 
         for (Alien alien : aliens) {
@@ -214,6 +233,9 @@ public class Board extends JPanel {
 
         Toolkit.getDefaultToolkit().sync();
     }
+    public void setInGame(boolean inGame){
+        this.inGame = inGame;
+    }
 
 
     private void gameOver(Graphics g) {
@@ -238,15 +260,6 @@ public class Board extends JPanel {
     }
 
     private void update() {
-
-        //   if (deaths == Commons.NUMBER_OF_ALIENS_TO_DESTROY) {
-
-        //        inGame = false;
-        //       timer.stop();
-        //        message = "Game won!";
-        //  }
-
-        // player
         if(deaths == AlienPerWave){
             if(currentWave < Waves){
                 currentWave++;
@@ -261,8 +274,8 @@ public class Board extends JPanel {
                 restartButton.setVisible(true);
             }
         }
+        boardController.updateGameState();
 
-        player.act();
 
         // shot
         if (shot.isVisible()) {
@@ -290,7 +303,6 @@ public class Board extends JPanel {
 
                         // Generar power-up de escudo cada 4 kills
                         if (shieldKillCount >= 4) {
-                            System.out.println("Generando power-up de escudo en: " + alienX + ", " + alienY);
                             // Ajustar la posición para que aparezca en el centro del alien
                             int powerUpX = alienX + (Commons.ALIEN_WIDTH / 2);
                             int powerUpY = alienY + (Commons.ALIEN_HEIGHT / 2);
@@ -343,108 +355,12 @@ public class Board extends JPanel {
                 shieldPowerUpActive = false;
             }
         }
+        //Actualizo aliens
+        boardController.handleAlienMovement();
 
-        // aliens
+        //Actualizo colisiones
+        boardController.handleCollisions();
 
-        for (Alien alien : aliens) {
-
-            int x = alien.getX();
-
-            if (x >= Commons.BOARD_WIDTH - Commons.BORDER_RIGHT && direction != -1) {
-
-                direction = -1;
-
-                Iterator<Alien> i1 = aliens.iterator();
-
-                while (i1.hasNext()) {
-
-                    Alien a2 = i1.next();
-                    a2.setY(a2.getY() + Commons.GO_DOWN);
-                }
-            }
-
-            if (x <= Commons.BORDER_LEFT && direction != 1) {
-
-                direction = 1;
-
-                Iterator<Alien> i2 = aliens.iterator();
-
-                while (i2.hasNext()) {
-
-                    Alien a = i2.next();
-                    a.setY(a.getY() + Commons.GO_DOWN);
-                }
-            }
-        }
-
-        Iterator<Alien> it = aliens.iterator();
-
-        while (it.hasNext()) {
-
-            Alien alien = it.next();
-
-            if (alien.isVisible()) {
-
-                int y = alien.getY();
-
-                if (y > Commons.GROUND - Commons.ALIEN_HEIGHT) {
-                    inGame = false;
-                    message = "Invasion!";
-                    restartButton.setVisible(true);
-                }
-
-                alien.act(direction);
-            }
-        }
-
-        // bombs
-        var generator = new Random();
-
-        for (Alien alien : aliens) {
-
-            int shot = generator.nextInt(15);
-            Alien.Bomb bomb = alien.getBomb();
-
-            if (shot == Commons.CHANCE && alien.isVisible() && bomb.isDestroyed()) {
-
-                bomb.setDestroyed(false);
-                bomb.setX(alien.getX());
-                bomb.setY(alien.getY());
-            }
-
-            int bombX = bomb.getX();
-            int bombY = bomb.getY();
-            int playerX = player.getX();
-            int playerY = player.getY();
-
-            if (player.isVisible() && !bomb.isDestroyed()) {
-
-                if (bombX >= (playerX)
-                        && bombX <= (playerX + Commons.PLAYER_WIDTH)
-                        && bombY >= (playerY)
-                        && bombY <= (playerY + Commons.PLAYER_HEIGHT)) {
-
-                    if (player.hasShield()) {
-                        player.setShield(false);
-                    } else {
-                        var ii = new ImageIcon(explImg);
-                        player.setImage(ii.getImage());
-                        player.setDying(true);
-                    }
-                    bomb.setDestroyed(true);
-                }
-            }
-
-            if (!bomb.isDestroyed()) {
-
-                bomb.setY(bomb.getY() + 1);
-
-                if (bomb.getY() >= Commons.GROUND - Commons.BOMB_HEIGHT) {
-
-                    bomb.setDestroyed(true);
-                }
-            }
-        }
     }
 
     private void drawPowerUps(Graphics g) {
@@ -498,29 +414,19 @@ public class Board extends JPanel {
         @Override
         public void keyReleased(KeyEvent e) {
 
-            player.keyReleased(e);
+            boardController.handleKeyReleased(e);
         }
 
         @Override
         public void keyPressed(KeyEvent e) {
-
-            player.keyPressed(e);
-
-            int x = player.getX();
-            int y = player.getY();
-
+            boardController.handleKeyPressed(e);
             int key = e.getKeyCode();
-
             if (key == KeyEvent.VK_SPACE) {
-
                 if (inGame) {
-
-                    if (!shot.isVisible()) {
-
-                        shot = new Shot(x, y);
+                   boardController.handlePlayerShot();
                     }
                 }
             }
         }
-    }
 }
+

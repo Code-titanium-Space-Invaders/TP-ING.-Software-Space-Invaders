@@ -5,7 +5,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 
 public class Player extends Sprite {
-
+    private static Player instance;
     private int width;
     private boolean hasShield;
     private Image shieldImage;
@@ -16,7 +16,24 @@ public class Player extends Sprite {
     public Player() {
         initPlayer();
     }
+    public static Player getInstance(){
+        if(instance == null){
+            instance = new Player();
+        }
+        return instance;
+    }
 
+    public void reset(){
+        hasShield = false;
+        dx = 0;
+        setDying(false);
+        setVisible(true);
+        setImage(neutro);
+        int START_X = 270;
+        setX(START_X);
+        int START_Y = Commons.GROUND - Commons.PLAYER_HEIGHT;
+        setY(START_Y);
+    }
     private void initPlayer() {
         // Cargar imágenes del jugador
         var playerImg = "src/resources/images/neutro.png";
@@ -46,6 +63,7 @@ public class Player extends Sprite {
         setY(START_Y);
 
         hasShield = false;
+        dx = 0;
     }
 
     public void act() {
@@ -57,33 +75,24 @@ public class Player extends Sprite {
             x = Commons.BOARD_WIDTH - 2 * width;
         }
     }
-
-    public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-
-        if (key == KeyEvent.VK_LEFT) {
-            dx = -2;
-            setImage(izq);
-        }
-
-        if (key == KeyEvent.VK_RIGHT) {
-            dx = 2;
-            setImage(der);
-        }
+    public void setDX(int dx){
+        this.dx = dx;
     }
 
-    public void keyReleased(KeyEvent e) {
-        int key = e.getKeyCode();
+    public int getWidth(){
+        return width;
+    }
 
-        if (key == KeyEvent.VK_LEFT) {
-            dx = 0;
-            setImage(neutro);
-        }
+    public Image getNeutro(){
+        return neutro;
+    }
 
-        if (key == KeyEvent.VK_RIGHT) {
-            dx = 0;
-            setImage(neutro);
-        }
+    public Image getDer(){
+        return der;
+    }
+
+    public Image getIzq(){
+        return izq;
     }
 
     public boolean hasShield() {
@@ -97,4 +106,36 @@ public class Player extends Sprite {
     public Image getShieldImage() {
         return shieldImage;
     }
+//
+//
+//
+//    public void keyPressed(KeyEvent e) {
+//        int key = e.getKeyCode();
+//
+//        if (key == KeyEvent.VK_LEFT) {
+//            dx = -2;
+//            setImage(izq);
+//        }
+//
+//        if (key == KeyEvent.VK_RIGHT) {
+//            dx = 2;
+//            setImage(der);
+//        }
+//    }
+//
+//    public void keyReleased(KeyEvent e) {
+//        int key = e.getKeyCode();
+//
+//        if (key == KeyEvent.VK_LEFT) {
+//            dx = 0;
+//            setImage(neutro);
+//        }
+//
+//        if (key == KeyEvent.VK_RIGHT) {
+//            dx = 0;
+//            setImage(neutro);
+//        }
+//    }
+//
+
 }
