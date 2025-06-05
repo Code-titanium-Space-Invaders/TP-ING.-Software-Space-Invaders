@@ -1,12 +1,12 @@
-package com.zetcode.UI.UI;
+package com.zetcode.UI.View;
 
-import com.zetcode.UI.Domain.Commons;
-import com.zetcode.UI.Domain.Alien;
-import com.zetcode.UI.Domain.Player;
-import com.zetcode.UI.Domain.Shot;
-import com.zetcode.UI.Domain.PowerUp.PowerUp;
-import com.zetcode.UI.Domain.PowerUp.PowerUpType;
-import com.zetcode.UI.Services.BoardController;
+import com.zetcode.UI.Model.Commons;
+import com.zetcode.UI.Model.Alien;
+import com.zetcode.UI.Model.Player;
+import com.zetcode.UI.Model.Shot;
+import com.zetcode.UI.Model.PowerUp.PowerUp;
+import com.zetcode.UI.Model.PowerUp.PowerUpType;
+import com.zetcode.UI.Controller.BoardController;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;

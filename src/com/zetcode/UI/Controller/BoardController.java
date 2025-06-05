@@ -1,10 +1,10 @@
-package com.zetcode.UI.Services;
+package com.zetcode.UI.Controller;
 
-import com.zetcode.UI.Domain.Alien;
-import com.zetcode.UI.Domain.Commons;
-import com.zetcode.UI.Domain.Player;
-import com.zetcode.UI.Domain.Shot;
-import com.zetcode.UI.UI.Board;
+import com.zetcode.UI.Model.Alien;
+import com.zetcode.UI.Model.Commons;
+import com.zetcode.UI.Model.Player;
+import com.zetcode.UI.Model.Shot;
+import com.zetcode.UI.View.Board;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;

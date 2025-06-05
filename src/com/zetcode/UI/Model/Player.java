@@ -1,8 +1,7 @@
-package com.zetcode.UI.Domain;
+package com.zetcode.UI.Model;
 
 import javax.swing.ImageIcon;
 import java.awt.*;
-import java.awt.event.KeyEvent;
 
 public class Player extends Sprite {
     private static Player instance;

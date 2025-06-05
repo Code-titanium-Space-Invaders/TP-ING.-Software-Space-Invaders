@@ -1,4 +1,4 @@
-package com.zetcode.UI.Domain;
+package com.zetcode.UI.Model;
 
 import javax.swing.ImageIcon;
 

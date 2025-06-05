@@ -1,4 +1,4 @@
-package com.zetcode.UI.Domain.PowerUp;
+package com.zetcode.UI.Model.PowerUp;
 
 import javax.swing.ImageIcon;
 import java.awt.Image;

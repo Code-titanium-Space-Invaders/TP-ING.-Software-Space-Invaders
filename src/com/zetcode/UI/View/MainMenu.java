@@ -1,8 +1,8 @@
-package com.zetcode.UI.UI;
+package com.zetcode.UI.View;
 
-import com.zetcode.UI.Domain.Commons;
-import com.zetcode.UI.Services.GameController;
-import com.zetcode.UI.Services.MenuController;
+import com.zetcode.UI.Model.Commons;
+import com.zetcode.UI.Controller.GameController;
+import com.zetcode.UI.Controller.MenuController;
 
 import javax.swing.*;
 import java.awt.*;

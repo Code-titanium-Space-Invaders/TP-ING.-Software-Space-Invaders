@@ -1,7 +1,7 @@
-package com.zetcode.UI.Services;
+package com.zetcode.UI.Controller;
 
-import com.zetcode.UI.UI.Board;
-import com.zetcode.UI.UI.MainMenu;
+import com.zetcode.UI.View.Board;
+import com.zetcode.UI.View.MainMenu;
 
 public class MenuController {
     private MainMenu menu;
