@@ -1,6 +1,6 @@
 package com.zetcode.UI.Controller;
 
-import com.zetcode.UI.View.SpaceInvaders;
+import com.zetcode.UI.SpaceInvaders;
 
 public class GameController {
     private SpaceInvaders game;

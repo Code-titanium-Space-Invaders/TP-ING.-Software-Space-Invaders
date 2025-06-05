@@ -1,7 +1,8 @@
-package com.zetcode.UI.View;
+package com.zetcode.UI;
 
 import com.zetcode.UI.Controller.GameController;
 import com.zetcode.UI.Model.Commons;
+import com.zetcode.UI.View.MainMenu;
 
 import javax.swing.JFrame;
 
