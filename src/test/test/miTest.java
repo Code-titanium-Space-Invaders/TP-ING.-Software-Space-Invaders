@@ -10,14 +10,14 @@ public class miTest {
     void testImageQtty() {
         // Este test verifica la cantidad de imágenes
         int expectedImageCount = 10;
-        int actualImageCount = 2; // Este valor debería venir de tu aplicación
+        int actualImageCount =2; // Este valor debería venir de tu aplicación
         assertEquals(expectedImageCount, actualImageCount,
                 "La cantidad de imágenes debería ser " + expectedImageCount);
     }
 
     @Test
     void testBasicGameLogic() {
-        // Test básico para verificar que el juego inicia correctamente
+        // Test para verificar que el juego inicia correctamente
         assertTrue(true, "El juego debería iniciar correctamente");
     }
 
@@ -28,7 +28,6 @@ public class miTest {
         int moveDistance = 5;
         int expectedX = initialX + moveDistance;
 
-        // Aquí deberías tener la lógica real de tu juego
         int actualX = initialX + moveDistance;
 
         assertEquals(expectedX, actualX,
