@@ -18,7 +18,7 @@ public class miTest {
     @Test
     void testBasicGameLogic() {
         // Test para verificar que el juego inicia correctamente
-        assertTrue(true, "El juego debería iniciar correctamente");
+        assertTrue(true, "El juego debería iniciar correctamente ");
     }
 
     @Test
