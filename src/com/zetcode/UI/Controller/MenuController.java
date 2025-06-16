@@ -14,6 +14,8 @@ public class MenuController {
 
     public void startNewGame() {
         Board gameBoard = new Board();
+        gameController.setBoard(gameBoard);
+        gameBoard.setGameController(gameController);
         menu.showGameBoard(gameBoard);
     }
 

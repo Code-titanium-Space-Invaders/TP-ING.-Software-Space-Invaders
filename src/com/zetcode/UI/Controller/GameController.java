@@ -1,9 +1,12 @@
 package com.zetcode.UI.Controller;
 
 import com.zetcode.UI.SpaceInvaders;
+import com.zetcode.UI.View.Board;
 
 public class GameController {
     private SpaceInvaders game;
+    private Board board;
+    public boolean isPaused = false;
 
     public GameController(SpaceInvaders game) {
         this.game = game;
@@ -15,13 +18,30 @@ public class GameController {
 
     public void pauseGame() {
         // Implementar lógica de pausa
+        if(board != null && board.getTimer() != null){
+            board.getTimer().stop();
+            isPaused = false;
+            if(board != null) {
+                board.repaint();
+                System.out.println("Juego pausado");
+            }
+        }
+    }
+    public void setBoard (Board board){
+        this.board = board;
     }
 
     public void resumeGame() {
-        // Implementar lógica de reanudar
+        if (board != null && board.getTimer() != null) {
+            board.getTimer().start();
+            isPaused = false;
+            if (board != null) {
+                board.repaint();
+                System.out.println("Juego reanudado"); // Debug
+            }
+        }
     }
-
-    public void endGame() {
-        // Implementar lógica de finalizar juego
+    public boolean isPaused() {
+        return isPaused;
     }
 }

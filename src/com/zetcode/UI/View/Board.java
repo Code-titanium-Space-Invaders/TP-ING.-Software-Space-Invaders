@@ -7,6 +7,7 @@ import com.zetcode.UI.Model.Shot;
 import com.zetcode.UI.Model.PowerUp.PowerUp;
 import com.zetcode.UI.Model.PowerUp.PowerUpType;
 import com.zetcode.UI.Controller.BoardController;
+import com.zetcode.UI.Controller.GameController;
 
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
@@ -19,6 +20,9 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
+import javax.swing.SwingUtilities;
+import javax.swing.BorderFactory;
+import java.util.Random;
 
 public class Board extends JPanel {
 
@@ -28,6 +32,7 @@ public class Board extends JPanel {
     private Shot shot;
     private JButton restartButton;
     private BoardController boardController;
+    private GameController gameController;
 
     private int direction = -1;
     private int deaths = 0;
@@ -35,26 +40,38 @@ public class Board extends JPanel {
     private int currentWave = 1;
     private int AlienPerWave = 6;
     private int shieldKillCount = 0;
-    private int points = 0; // Puntos actuales
-    private static final int MAX_POINTS = 100; // Puntos máximos (100%)
-    private static final int POINTS_PER_KILL = 10; // 10% por cada enemigo
+    private int score = 0; // Puntuación actual
+    private static final int SCORE_PER_KILL = 100; // Puntos por cada enemigo eliminado
+    private static final int POWER_UP_THRESHOLD = 1000; // Umbral para dropear power-up
+    private Random random = new Random();
     private PowerUp shieldPowerUp;
     private boolean shieldPowerUpActive = false;
 
     private boolean inGame = true;
     private String explImg = "src/resources/images/explosion1.png";
     private String message = "Game Over";
-    private Image backgroundImage ;
+    private Image backgroundImage;
     private Timer timer;
-
 
     public Board() {
         initBoard();
         loadBackGroundImage();
         createRestartButton();
         this.boardController = new BoardController(this);
-
     }
+
+    public Timer getTimer() {
+        return timer;
+    }
+
+    public GameController getGameController() {
+        return gameController;
+    }
+
+    public void setGameController(GameController gameController) {
+        this.gameController = gameController;
+    }
+
     private void loadBackGroundImage() {
         var ii = new ImageIcon("src/resources/images/board2.png");
         backgroundImage = ii.getImage();
@@ -185,6 +202,7 @@ public class Board extends JPanel {
         inGame = true;
         deaths = 0;
         currentWave = 1;
+        score = 0; // Reiniciar la puntuación
         gameInit();
         timer.start();
         restartButton.setVisible(false);
@@ -211,7 +229,6 @@ public class Board extends JPanel {
         g.setColor(Color.green);
 
         if (inGame) {
-
             g.drawLine(0, Commons.GROUND,
                     Commons.BOARD_WIDTH, Commons.GROUND);
 
@@ -220,14 +237,16 @@ public class Board extends JPanel {
             drawShot(g);
             drawBombing(g);
             drawPowerUps(g);
-            drawPointsBar(g);
+            drawScore(g);
 
+            // Manejar el estado de pausa
+            if (gameController != null && gameController.isPaused()) {
+                drawPauseMessage(g);
+            }
         } else {
-
             if (timer.isRunning()) {
                 timer.stop();
             }
-
             gameOver(g);
         }
 
@@ -298,18 +317,9 @@ public class Board extends JPanel {
                         deaths++;
                         shieldKillCount++;
 
-                        // Actualizar puntos
-                        points = Math.min(points + POINTS_PER_KILL, MAX_POINTS);
-
-                        // Generar power-up de escudo cada 4 kills
-                        if (shieldKillCount >= 4) {
-                            // Ajustar la posición para que aparezca en el centro del alien
-                            int powerUpX = alienX + (Commons.ALIEN_WIDTH / 2);
-                            int powerUpY = alienY + (Commons.ALIEN_HEIGHT / 2);
-                            shieldPowerUp = new PowerUp(PowerUpType.SHIELD, powerUpX, powerUpY);
-                            shieldPowerUpActive = true;
-                            shieldKillCount = 0;
-                        }
+                        // Actualizar puntuación
+                        score += SCORE_PER_KILL;
+                        checkPowerUpDrop(alienX, alienY);
 
                         shot.die();
                     }
@@ -350,7 +360,7 @@ public class Board extends JPanel {
 
             // Desactivar si sale de la pantalla
             if (powerUpY > Commons.GROUND) {
-              //  System.out.println("Power-up fuera de pantalla");
+                //  System.out.println("Power-up fuera de pantalla");
                 shieldPowerUp.setVisible(false);
                 shieldPowerUpActive = false;
             }
@@ -365,7 +375,7 @@ public class Board extends JPanel {
 
     private void drawPowerUps(Graphics g) {
         if (shieldPowerUpActive && shieldPowerUp != null && shieldPowerUp.isVisible()) {
-           // System.out.println("Dibujando power-up en: " + shieldPowerUp.getX() + ", " + shieldPowerUp.getY());
+            // System.out.println("Dibujando power-up en: " + shieldPowerUp.getX() + ", " + shieldPowerUp.getY());
             g.drawImage(shieldPowerUp.getImage(),
                     shieldPowerUp.getX(),
                     shieldPowerUp.getY(),
@@ -373,25 +383,49 @@ public class Board extends JPanel {
         }
     }
 
-    private void drawPointsBar(Graphics g) {
-        // Dibujar el fondo de la barra
-        g.setColor(Color.DARK_GRAY);
-        g.fillRect(Commons.BOARD_WIDTH - 210, 20, 200, 20);
-
-        // Dibujar la barra de progreso
-        g.setColor(Color.GREEN);
-        int barWidth = (points * 200) / MAX_POINTS;
-        g.fillRect(Commons.BOARD_WIDTH - 210, 20, barWidth, 20);
-
-        // Dibujar el borde
+    private void drawScore(Graphics g) {
+        // Dibujar el texto de puntuación
         g.setColor(Color.WHITE);
-        g.drawRect(Commons.BOARD_WIDTH - 210, 20, 200, 20);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        String scoreText = "Score: " + score;
+        g.drawString(scoreText, 20, 30);
+    }
 
-        // Dibujar el texto de puntos
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Arial", Font.BOLD, 14));
-        String pointsText = points + "%";
-        g.drawString(pointsText, Commons.BOARD_WIDTH - 250, 35);
+    private void checkPowerUpDrop(int alienX, int alienY) {
+        if (score >= POWER_UP_THRESHOLD && score % POWER_UP_THRESHOLD == 0) {
+            // Seleccionar un power-up aleatorio
+            PowerUpType[] types = PowerUpType.values();
+            PowerUpType randomType = types[random.nextInt(types.length)];
+
+            // Crear el power-up en la posición del alien eliminado
+            shieldPowerUp = new PowerUp(randomType, alienX, alienY);
+            shieldPowerUpActive = true;
+            shieldKillCount = 0;
+        }
+    }
+
+    private void drawPauseMessage(Graphics g) {
+        // Crear un fondo semi-transparente
+        g.setColor(new Color(0, 0, 0, 200));
+        g.fillRect(0, 0, Commons.BOARD_WIDTH, Commons.BOARD_HEIGHT);
+
+        // Configurar el estilo del texto
+        var font = new Font("Arial", Font.BOLD, 80);
+        g.setFont(font);
+
+        // Dibujar el texto "PAUSED GAME"
+        String message = "PAUSED GAME";
+        var fontMetrics = g.getFontMetrics(font);
+        int x = (Commons.BOARD_WIDTH - fontMetrics.stringWidth(message)) / 2;
+        int y = Commons.BOARD_HEIGHT / 2 - 50;
+
+        // Agregar un efecto de sombra más pronunciado
+        g.setColor(new Color(0, 0, 0, 200));
+        g.drawString(message, x + 4, y + 4);
+
+        // Dibujar el texto principal con un color más brillante
+        g.setColor(new Color(255, 255, 255, 255));
+        g.drawString(message, x, y);
     }
 
     private void doGameCycle() {
@@ -423,10 +457,10 @@ public class Board extends JPanel {
             int key = e.getKeyCode();
             if (key == KeyEvent.VK_SPACE) {
                 if (inGame) {
-                   boardController.handlePlayerShot();
-                    }
+                    boardController.handlePlayerShot();
                 }
             }
         }
+    }
 }
 

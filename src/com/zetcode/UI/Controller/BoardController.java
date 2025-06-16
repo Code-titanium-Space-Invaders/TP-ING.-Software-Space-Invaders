@@ -15,6 +15,7 @@ public class BoardController {
     private Board board;
     private Player player;
     private int direction = -1;
+    private boolean isPaused = false;
 
     public BoardController(Board board) {
         this.board = board;
@@ -37,6 +38,16 @@ public class BoardController {
         if (key == KeyEvent.VK_RIGHT) {
             handlePlayerMovement(2);
             player.setImage(player.getDer());
+        }
+        if(key == KeyEvent.VK_P){
+            if(!isPaused){
+                board.getGameController().pauseGame();
+                isPaused = true;
+            }
+            else{
+                board.getGameController().resumeGame();
+                isPaused = false;
+            }
         }
     }
 
@@ -149,6 +160,7 @@ public class BoardController {
         }
 
     }
+    public boolean isPaused() {return isPaused;}
 
     public void updateGameState() {
         // Implementar actualización del estado del juego
