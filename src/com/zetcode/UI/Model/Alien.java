@@ -6,9 +6,9 @@ import java.util.Random;
 public class Alien extends Sprite {
 
     private Bomb bomb;
-    protected long lastShotTime;
-    protected long shotInterval;
-    protected Random random;
+    public long lastShotTime;
+    public long shotInterval;
+    public Random random;
     public Alien(int x, int y) {
 
         initAlien(x, y);

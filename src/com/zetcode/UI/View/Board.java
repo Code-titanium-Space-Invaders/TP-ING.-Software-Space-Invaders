@@ -692,6 +692,9 @@ public class Board extends JPanel {
     public int getCurrentWave(){
         return currentWave;
     }
+    public int getScore(){
+        return score;
+    }
 }
 
 
