@@ -11,6 +11,7 @@ public class Player extends Sprite {
     private Image neutro;
     private Image der;
     private Image izq;
+    private int extraLives;
 
     public Player() {
         initPlayer();
@@ -25,6 +26,7 @@ public class Player extends Sprite {
     public void reset(){
         hasShield = false;
         dx = 0;
+        extraLives = 0;
         setDying(false);
         setVisible(true);
         setImage(neutro);
@@ -104,6 +106,27 @@ public class Player extends Sprite {
 
     public Image getShieldImage() {
         return shieldImage;
+    }
+
+
+    public void addExtraLife() {
+        extraLives++;
+        System.out.println("Vida extra agregada. Total de vidas extra: " + extraLives);
+    }
+
+    public boolean hasExtraLife() {
+        return extraLives > 0;
+    }
+
+    public void consumeExtraLife() {
+        if (extraLives > 0) {
+            extraLives--;
+            System.out.println("Vida extra consumida. Vidas extra restantes: " + extraLives);
+        }
+    }
+
+    public int getExtraLives() {
+        return extraLives;
     }
 //
 //

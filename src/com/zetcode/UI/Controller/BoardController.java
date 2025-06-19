@@ -4,6 +4,7 @@ import com.zetcode.UI.Model.Alien;
 import com.zetcode.UI.Model.Commons;
 import com.zetcode.UI.Model.Player;
 import com.zetcode.UI.Model.Shot;
+import com.zetcode.UI.Model.PowerUp.PowerUpStrategy;
 import com.zetcode.UI.View.Board;
 
 import javax.swing.*;
@@ -64,6 +65,12 @@ public class BoardController {
         if(!board.getShot().isVisible()){
             Shot shot = new Shot(player.getX(),player.getY());
             board.setShot(shot);
+
+            if(board.getActivePowerUp() instanceof com.zetcode.UI.Model.PowerUp.DoubleShotPowerUp &&
+            board.getActivePowerUp().isActive()){
+                Shot shot2 = new Shot(player.getX() + 20, player.getY());
+                board.setShot2(shot2);
+            }
         }
     }
 
@@ -139,7 +146,16 @@ public class BoardController {
 
                     if (player.hasShield()) {
                         player.setShield(false);
-                    } else {
+                        if(board.getActivePowerUp() instanceof com.zetcode.UI.Model.PowerUp.ShieldPowerUp){
+                            board.getActivePowerUp().removeEffect(player);
+                            board.setActivePowerUp(null);
+                            board.setPowerUpDropped(false);
+                        }
+                    }else if(player.hasExtraLife()){
+                        player.consumeExtraLife();
+                        System.out.println("El jugador ha perdido una vida extra");
+                    }
+                    else {
                         var ii = new ImageIcon("src/resources/images/explosion1.png");
                         player.setImage(ii.getImage());
                         player.setDying(true);

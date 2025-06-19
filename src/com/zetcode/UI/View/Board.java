@@ -3,9 +3,8 @@ package com.zetcode.UI.View;
 import com.zetcode.UI.Model.Commons;
 import com.zetcode.UI.Model.Alien;
 import com.zetcode.UI.Model.Player;
+import com.zetcode.UI.Model.PowerUp.*;
 import com.zetcode.UI.Model.Shot;
-import com.zetcode.UI.Model.PowerUp.PowerUp;
-import com.zetcode.UI.Model.PowerUp.PowerUpType;
 import com.zetcode.UI.Controller.BoardController;
 import com.zetcode.UI.Controller.GameController;
 
@@ -20,8 +19,6 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
-import javax.swing.SwingUtilities;
-import javax.swing.BorderFactory;
 import java.util.Random;
 
 public class Board extends JPanel {
@@ -30,6 +27,7 @@ public class Board extends JPanel {
     private List<Alien> aliens;
     private Player player;
     private Shot shot;
+    private Shot shot2; // Segunda bala para el disparo doble
     private JButton restartButton;
     private BoardController boardController;
     private GameController gameController;
@@ -42,7 +40,7 @@ public class Board extends JPanel {
     private int shieldKillCount = 0;
     private int score = 0; // Puntuación actual
     private static final int SCORE_PER_KILL = 100; // Puntos por cada enemigo eliminado
-    private static final int POWER_UP_THRESHOLD = 1000; // Umbral para dropear power-up
+    private static final int POWER_UP_THRESHOLD = 100; // Umbral para dropear power-up
     private Random random = new Random();
     private PowerUp shieldPowerUp;
     private boolean shieldPowerUpActive = false;
@@ -52,6 +50,10 @@ public class Board extends JPanel {
     private String message = "Game Over";
     private Image backgroundImage;
     private Timer timer;
+
+    private PowerUpStrategy activePowerUp;
+    private long powerUpStartTime;
+    private boolean powerUpDropped = false; // Nueva variable para controlar si ya se dropeó un power-up en este umbral
 
     public Board() {
         initBoard();
@@ -97,6 +99,7 @@ public class Board extends JPanel {
         player = Player.getInstance();
         player.reset();
         shot = new Shot();
+        shot2 = new Shot();
     }
 
     private void spawnWave() {
@@ -108,6 +111,7 @@ public class Board extends JPanel {
                 aliens.add(alien);
             }
         }
+        System.out.println("Oleada " + currentWave + " creada con " + aliens.size() + " enemigos");
     }
 
     public Player getPlayer(){
@@ -120,6 +124,26 @@ public class Board extends JPanel {
 
     public void setShot(Shot shot){
         this.shot = shot;
+    }
+
+    public Shot getShot2(){
+        return shot2;
+    }
+
+    public void setShot2(Shot shot2){
+        this.shot2 = shot2;
+    }
+
+    public PowerUpStrategy getActivePowerUp(){
+        return activePowerUp;
+    }
+
+    public void setActivePowerUp(PowerUpStrategy activePowerUp){
+        this.activePowerUp = activePowerUp;
+    }
+
+    public void setPowerUpDropped(boolean powerUpDropped){
+        this.powerUpDropped = powerUpDropped;
     }
 
     public boolean isInGame() {
@@ -147,33 +171,40 @@ public class Board extends JPanel {
     }
 
     private void drawPlayer(Graphics g) {
-
         if (player.isVisible()) {
-
             g.drawImage(player.getImage(), player.getX(), player.getY(), this);
 
             if (player.hasShield()) {
+                // Dibujar el escudo con un efecto de brillo
+                g.setColor(new Color(0, 255, 255, 100)); // Color cyan semi-transparente
+                g.fillOval(player.getX() - 15,
+                        player.getY() - 15,
+                        player.getImage().getWidth(null) + 30,
+                        player.getImage().getHeight(null) + 30);
+
+                // Dibujar la imagen del escudo
                 g.drawImage(player.getShieldImage(),
-                        player.getX() - 10,
-                        player.getY() - 10,
-                        player.getImage().getWidth(null) + 20,
-                        player.getImage().getHeight(null) + 20,
+                        player.getX() - 15,
+                        player.getY() - 15,
+                        player.getImage().getWidth(null) + 30,
+                        player.getImage().getHeight(null) + 30,
                         this);
             }
         }
 
         if (player.isDying()) {
-
             player.die();
             inGame = false;
         }
     }
 
     private void drawShot(Graphics g) {
-
         if (shot.isVisible()) {
-
             g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
+        }
+
+        if (shot2.isVisible()) {
+            g.drawImage(shot2.getImage(), shot2.getX(), shot2.getY(), this);
         }
     }
 
@@ -203,10 +234,11 @@ public class Board extends JPanel {
         deaths = 0;
         currentWave = 1;
         score = 0; // Reiniciar la puntuación
+        powerUpDropped = false; // Resetear la bandera de power-up
+        activePowerUp = null; // Limpiar el power-up activo
         gameInit();
         timer.start();
         restartButton.setVisible(false);
-
     }
 
     @Override
@@ -279,22 +311,8 @@ public class Board extends JPanel {
     }
 
     private void update() {
-        if(deaths == AlienPerWave){
-            if(currentWave < Waves){
-                currentWave++;
-                spawnWave();
-                deaths = 0;
-            }
-
-            else{
-                inGame = false;
-                timer.stop();
-                message = "Game won!";
-                restartButton.setVisible(true);
-            }
-        }
+        checkWaveProgress();
         boardController.updateGameState();
-
 
         // shot
         if (shot.isVisible()) {
@@ -315,20 +333,28 @@ public class Board extends JPanel {
                         alien.setImage(ii.getImage());
                         alien.setDying(true);
                         deaths++;
-                        shieldKillCount++;
 
                         // Actualizar puntuación
                         score += SCORE_PER_KILL;
+                        System.out.println("Alien eliminado. Nuevo score: " + score);
                         checkPowerUpDrop(alienX, alienY);
 
                         shot.die();
+                        if (shot2.isVisible()) {
+                            shot2.die(); // Desactivar la segunda bala también
+                        }
                     }
                 }
             }
 
-            // Restaurar la lógica del disparo
+            // Actualizar velocidad de las balas si el power-up de velocidad está activo
+            int shotSpeed = 7; // Velocidad base
+            if (activePowerUp instanceof RapidFirePowerUp && activePowerUp.isActive()) {
+                shotSpeed *= 2; // Duplicar la velocidad
+            }
+
             int y = shot.getY();
-            y -= 7;
+            y -= shotSpeed;
 
             if (y < 0) {
                 shot.die();
@@ -337,49 +363,143 @@ public class Board extends JPanel {
             }
         }
 
-        // Actualizar power-up de escudo
-        if (shieldPowerUpActive && shieldPowerUp != null && shieldPowerUp.isVisible()) {
-            shieldPowerUp.move();
+        // shot2 (segunda bala para disparo doble)
+        if (shot2.isVisible()) {
+            int shotX = shot2.getX();
+            int shotY = shot2.getY();
 
-            // Verificar colisión con el jugador
-            int powerUpX = shieldPowerUp.getX();
-            int powerUpY = shieldPowerUp.getY();
-            int playerX = player.getX();
-            int playerY = player.getY();
+            for (Alien alien : aliens) {
+                int alienX = alien.getX();
+                int alienY = alien.getY();
 
-            if (powerUpX >= (playerX)
-                    && powerUpX <= (playerX + Commons.PLAYER_WIDTH)
-                    && powerUpY >= (playerY)
-                    && powerUpY <= (playerY + Commons.PLAYER_HEIGHT)) {
+                if (alien.isVisible() && shot2.isVisible()) {
+                    if (shotX >= (alienX)
+                            && shotX <= (alienX + Commons.ALIEN_WIDTH)
+                            && shotY >= (alienY)
+                            && shotY <= (alienY + Commons.ALIEN_HEIGHT)) {
 
-                System.out.println("Power-up recogido");
-                player.setShield(true);
-                shieldPowerUp.setVisible(false);
-                shieldPowerUpActive = false;
+                        var ii = new ImageIcon(explImg);
+                        alien.setImage(ii.getImage());
+                        alien.setDying(true);
+                        deaths++;
+
+                        // Actualizar puntuación
+                        score += SCORE_PER_KILL;
+                        System.out.println("Alien eliminado por segunda bala. Nuevo score: " + score);
+                        checkPowerUpDrop(alienX, alienY);
+
+                        shot2.die();
+                        if (shot.isVisible()) {
+                            shot.die(); // Desactivar la primera bala también
+                        }
+                    }
+                }
             }
 
-            // Desactivar si sale de la pantalla
-            if (powerUpY > Commons.GROUND) {
-                //  System.out.println("Power-up fuera de pantalla");
-                shieldPowerUp.setVisible(false);
-                shieldPowerUpActive = false;
+            // Actualizar velocidad de las balas si el power-up de velocidad está activo
+            int shotSpeed = 7; // Velocidad base
+            if (activePowerUp instanceof RapidFirePowerUp && activePowerUp.isActive()) {
+                shotSpeed *= 2; // Duplicar la velocidad
+            }
+
+            int y = shot2.getY();
+            y -= shotSpeed;
+
+            if (y < 0) {
+                shot2.die();
+            } else {
+                shot2.setY(y);
             }
         }
+
+        // Actualizar power-up activo
+        if (activePowerUp != null && activePowerUp instanceof AbstractPowerUp) {
+            AbstractPowerUp powerUp = (AbstractPowerUp) activePowerUp;
+
+            // Solo mover si es visible
+            if (powerUp.isVisible()) {
+                powerUp.move();
+
+                // Verificar colisión con el jugador
+                int powerUpX = powerUp.getX();
+                int powerUpY = powerUp.getY();
+                int playerX = player.getX();
+                int playerY = player.getY();
+
+                if (powerUpX >= (playerX)
+                        && powerUpX <= (playerX + Commons.PLAYER_WIDTH)
+                        && powerUpY >= (playerY)
+                        && powerUpY <= (playerY + Commons.PLAYER_HEIGHT)) {
+
+                    System.out.println("Power-up recogido: " + powerUp.getType().getName());
+                    activePowerUp.applyEffect(player);
+                    powerUp.setVisible(false);
+                    if(activePowerUp instanceof AreaBombPowerUp){
+                        AreaBombPowerUp areaBomb = (AreaBombPowerUp) activePowerUp;
+                        areaBomb.executeAreaBomb(aliens, this);
+                        activePowerUp = null;
+                        powerUpDropped = false;
+                    } else if (activePowerUp instanceof ExtraLifePowerUp) {
+                        activePowerUp = null;
+                        powerUpDropped = false;
+                    } else{// Para power-ups temporales, iniciar el timer
+                        if (!(activePowerUp instanceof ShieldPowerUp)) {
+                            powerUpStartTime = System.currentTimeMillis();
+                        }
+                    }
+                }
+
+                // Desactivar si sale de la pantalla
+                if (powerUpY > Commons.GROUND) {
+                    powerUp.setVisible(false);
+                    activePowerUp = null;
+                    powerUpDropped = false;
+                }
+            }
+        }
+
+        // Verificar duración del power-up (solo para power-ups temporales)
+        if (activePowerUp != null && activePowerUp.isActive() && activePowerUp.getDuration() > 0) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - powerUpStartTime >= activePowerUp.getDuration()) {
+                activePowerUp.removeEffect(player);
+
+                // Si es disparo doble, desactivar ambas balas
+                if (activePowerUp instanceof DoubleShotPowerUp) {
+                    shot.die();
+                    shot2.die();
+                }
+
+                activePowerUp = null;
+                powerUpDropped = false;
+            }
+        }
+
+        // Si no hay power-up activo, permitir que se cree uno nuevo
+        if (activePowerUp == null) {
+            powerUpDropped = false;
+        }
+
         //Actualizo aliens
         boardController.handleAlienMovement();
 
         //Actualizo colisiones
         boardController.handleCollisions();
-
     }
 
     private void drawPowerUps(Graphics g) {
-        if (shieldPowerUpActive && shieldPowerUp != null && shieldPowerUp.isVisible()) {
-            // System.out.println("Dibujando power-up en: " + shieldPowerUp.getX() + ", " + shieldPowerUp.getY());
-            g.drawImage(shieldPowerUp.getImage(),
-                    shieldPowerUp.getX(),
-                    shieldPowerUp.getY(),
-                    this);
+        if (activePowerUp != null && activePowerUp instanceof AbstractPowerUp) {
+            AbstractPowerUp powerUp = (AbstractPowerUp) activePowerUp;
+            System.out.println("Dibujando power-up: " + powerUp.getType().getName() +
+                    ", Visible: " + powerUp.isVisible() +
+                    ", X: " + powerUp.getX() +
+                    ", Y: " + powerUp.getY());
+            if (powerUp.isVisible()) {
+                g.drawImage(powerUp.getImage(),
+                        powerUp.getX(),
+                        powerUp.getY(),
+                        this);
+            }
         }
     }
 
@@ -389,18 +509,65 @@ public class Board extends JPanel {
         g.setFont(new Font("Arial", Font.BOLD, 20));
         String scoreText = "Score: " + score;
         g.drawString(scoreText, 20, 30);
+
+        if(player.getExtraLives() > 0){
+            String livesText = "Vidas extra: " + player.getExtraLives();
+            g.drawString(livesText, 20, 60);
+        }
     }
 
     private void checkPowerUpDrop(int alienX, int alienY) {
-        if (score >= POWER_UP_THRESHOLD && score % POWER_UP_THRESHOLD == 0) {
+        System.out.println("Checking power-up drop. Score: " + score + ", PowerUpDropped: " + powerUpDropped);
+
+        // Solo dropear power-up cuando el score sea exactamente 1000 o múltiplos de 1000
+        // y no se haya dropeado ya un power-up en este umbral
+        if (score > 0 && score % POWER_UP_THRESHOLD == 0 && !powerUpDropped) {
+            System.out.println("Intentando crear power-up...");
             // Seleccionar un power-up aleatorio
             PowerUpType[] types = PowerUpType.values();
             PowerUpType randomType = types[random.nextInt(types.length)];
+            System.out.println("Power-up seleccionado: " + randomType.getName());
 
-            // Crear el power-up en la posición del alien eliminado
-            shieldPowerUp = new PowerUp(randomType, alienX, alienY);
-            shieldPowerUpActive = true;
-            shieldKillCount = 0;
+            // Asegurarnos de que el power-up aparezca en una posición visible
+            int powerUpX = alienX;
+            int powerUpY = alienY + Commons.ALIEN_HEIGHT; // Posicionarlo justo debajo del alien
+
+            // Crear el power-up específico según el tipo
+            switch (randomType) {
+                case RAPID_FIRE:
+                    activePowerUp = new RapidFirePowerUp(powerUpX, powerUpY);
+                    break;
+                case SHIELD:
+                    activePowerUp = new ShieldPowerUp(powerUpX, powerUpY);
+                    break;
+                case DOUBLE_SHOT:
+                    activePowerUp = new DoubleShotPowerUp(powerUpX, powerUpY);
+                    break;
+                case EXTRA_LIFE:
+                    activePowerUp = new ExtraLifePowerUp(powerUpX, powerUpY);
+                    break;
+                case AREA_BOMB:
+                    activePowerUp = new AreaBombPowerUp(powerUpX,powerUpY);
+                    break;
+                // Agregar otros casos según sea necesario
+            }
+
+            if (activePowerUp != null) {
+                if (activePowerUp instanceof AbstractPowerUp) {
+                    AbstractPowerUp powerUp = (AbstractPowerUp) activePowerUp;
+                    powerUp.setVisible(true);
+                    System.out.println("Power-up creado y visible: " + powerUp.getType().getName() +
+                            ", X: " + powerUp.getX() +
+                            ", Y: " + powerUp.getY());
+                }
+                powerUpStartTime = System.currentTimeMillis();
+                powerUpDropped = true;
+                System.out.println("Power-up creado exitosamente: " + randomType.getName() + " en score: " + score);
+            }
+        } else if (score % POWER_UP_THRESHOLD != 0) {
+            // Resetear la bandera cuando pasamos a un nuevo umbral
+            powerUpDropped = false;
+            System.out.println("Reseteando bandera powerUpDropped");
         }
     }
 
@@ -462,5 +629,52 @@ public class Board extends JPanel {
             }
         }
     }
+    public void addScore(int points){
+        this.score += points;
+        System.out.println("score actualizado "+score);
+    }
+    public void addDeaths(int deaths){
+        System.out.println("Antes de agregar muertes: "+this.deaths);
+        this.deaths = deaths;
+        System.out.println("Despues de agregar "+deaths + "Muertes "+this.deaths);
+    }
+    public void checkWaveProgress(){
+        System.out.println("Verificando progreso de oleada - Muertes: " + deaths + ", AlienPerWave: " + AlienPerWave + ", CurrentWave: " + currentWave + ", Waves: " + Waves);
+        if(deaths == AlienPerWave){
+            System.out.println("¡Condición cumplida! Pasando a siguiente oleada o terminando juego");
+            if(currentWave < Waves){
+                currentWave++;
+                spawnWave();
+                deaths = 0;
+                System.out.println("Pasando a la oleada " + currentWave);
+            }
+            else{
+                inGame = false;
+                timer.stop();
+                message = "Game won!";
+                restartButton.setVisible(true);
+                System.out.println("¡Juego completado! Todas las oleadas superadas.");
+            }
+        } else {
+            System.out.println("Condición no cumplida - Faltan " + (AlienPerWave - deaths) + " enemigos para pasar de oleada");
+        }
+    }
+    public void forceNextWave() {
+        System.out.println("Forzando paso a siguiente oleada - CurrentWave: " + currentWave + ", Waves: " + Waves);
+        if(currentWave < Waves){
+            currentWave++;
+            spawnWave();
+            deaths = 0;
+            System.out.println("¡Pasando a la oleada " + currentWave + "!");
+        }
+        else{
+            inGame = false;
+            timer.stop();
+            message = "Game won!";
+            restartButton.setVisible(true);
+            System.out.println("¡Juego completado! Todas las oleadas superadas.");
+        }
+    }
 }
+
 
