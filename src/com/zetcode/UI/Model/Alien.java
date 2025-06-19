@@ -1,14 +1,19 @@
 package com.zetcode.UI.Model;
 
 import javax.swing.ImageIcon;
+import java.util.Random;
 
 public class Alien extends Sprite {
 
     private Bomb bomb;
-
+    protected long lastShotTime;
+    protected long shotInterval;
+    protected Random random;
     public Alien(int x, int y) {
 
         initAlien(x, y);
+        random = new Random();
+        resetShotTimer();
     }
 
     private void initAlien(int x, int y) {
@@ -18,7 +23,7 @@ public class Alien extends Sprite {
 
         bomb = new Bomb(x, y);
 
-        var alienImg = "src/resources/images/elien.png";
+        var alienImg = "src/resources/images/elien1.png";
         var ii = new ImageIcon(alienImg);
 
         setImage(ii.getImage());
@@ -33,6 +38,25 @@ public class Alien extends Sprite {
 
         return bomb;
     }
+
+    public int getPoints(){
+        return 100;
+    }
+
+    public void resetShotTimer(){
+        shotInterval = (random.nextInt(3)+1)*1000;
+        lastShotTime = System.currentTimeMillis();
+    }
+
+    public boolean shouldShoot(){
+        long currentTime = System.currentTimeMillis();
+        if(currentTime - lastShotTime >= shotInterval){
+            resetShotTimer();
+            return true;
+        }
+        return false;
+    }
+
 //clase bomba usada solo por el alien
     public class Bomb extends Sprite {
 

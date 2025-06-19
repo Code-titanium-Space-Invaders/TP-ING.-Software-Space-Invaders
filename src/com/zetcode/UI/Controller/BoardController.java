@@ -32,12 +32,12 @@ public class BoardController {
         int key = e.getKeyCode();
 
         if (key == KeyEvent.VK_LEFT) {
-             handlePlayerMovement(-2);
+             handlePlayerMovement(-6);
             player.setImage(player.getIzq());
         }
 
         if (key == KeyEvent.VK_RIGHT) {
-            handlePlayerMovement(2);
+            handlePlayerMovement(6);
             player.setImage(player.getDer());
         }
         if(key == KeyEvent.VK_P){
@@ -76,6 +76,8 @@ public class BoardController {
 
     public void handleAlienMovement() {
         // Implementar lógica de movimiento de aliens
+        int baseSpeed = 1;
+        int speed = baseSpeed + (board.getCurrentWave() - 1)/2;
         for (Alien alien : board.getAliens()) {
 
             int x = alien.getX();
@@ -111,7 +113,7 @@ public class BoardController {
                     board.setInGame(false);
                 }
 
-                alien.act(direction);
+                alien.act(direction * speed);
             }
         }
     }
@@ -122,16 +124,17 @@ public class BoardController {
 
         for (Alien alien : board.getAliens()) {
 
-            int shot = generator.nextInt(15);
-            Alien.Bomb bomb = alien.getBomb();
-
-            if (shot == Commons.CHANCE && alien.isVisible() && bomb.isDestroyed()) {
-
-                bomb.setDestroyed(false);
-                bomb.setX(alien.getX());
-                bomb.setY(alien.getY());
+            // Verificar si el alien debe disparar
+            if (alien.shouldShoot() && alien.isVisible()) {
+                Alien.Bomb bomb = alien.getBomb();
+                if (bomb.isDestroyed()) {
+                    bomb.setDestroyed(false);
+                    bomb.setX(alien.getX());
+                    bomb.setY(alien.getY());
+                }
             }
 
+            Alien.Bomb bomb = alien.getBomb();
             int bombX = bomb.getX();
             int bombY = bomb.getY();
             int playerX = player.getX();
@@ -146,16 +149,17 @@ public class BoardController {
 
                     if (player.hasShield()) {
                         player.setShield(false);
-                        if(board.getActivePowerUp() instanceof com.zetcode.UI.Model.PowerUp.ShieldPowerUp){
+                        // Si el escudo se desactiva por impacto, permitir nuevos power-ups
+                        if (board.getActivePowerUp() instanceof com.zetcode.UI.Model.PowerUp.ShieldPowerUp) {
                             board.getActivePowerUp().removeEffect(player);
                             board.setActivePowerUp(null);
                             board.setPowerUpDropped(false);
                         }
-                    }else if(player.hasExtraLife()){
+                    } else if (player.hasExtraLife()) {
+                        // Consumir una vida extra en lugar de morir
                         player.consumeExtraLife();
-                        System.out.println("El jugador ha perdido una vida extra");
-                    }
-                    else {
+                        System.out.println("Jugador perdió una vida extra");
+                    } else {
                         var ii = new ImageIcon("src/resources/images/explosion1.png");
                         player.setImage(ii.getImage());
                         player.setDying(true);

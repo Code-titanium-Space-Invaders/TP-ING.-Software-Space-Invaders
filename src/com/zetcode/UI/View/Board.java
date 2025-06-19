@@ -1,10 +1,7 @@
 package com.zetcode.UI.View;
 
-import com.zetcode.UI.Model.Commons;
-import com.zetcode.UI.Model.Alien;
-import com.zetcode.UI.Model.Player;
+import com.zetcode.UI.Model.*;
 import com.zetcode.UI.Model.PowerUp.*;
-import com.zetcode.UI.Model.Shot;
 import com.zetcode.UI.Controller.BoardController;
 import com.zetcode.UI.Controller.GameController;
 
@@ -34,9 +31,9 @@ public class Board extends JPanel {
 
     private int direction = -1;
     private int deaths = 0;
-    private int Waves = 2;
+    private int Waves = 40;
     private int currentWave = 1;
-    private int AlienPerWave = 6;
+    private int AlienPerWave = 36;
     private int shieldKillCount = 0;
     private int score = 0; // Puntuación actual
     private static final int SCORE_PER_KILL = 100; // Puntos por cada enemigo eliminado
@@ -104,11 +101,17 @@ public class Board extends JPanel {
 
     private void spawnWave() {
         aliens.clear();
-        for (int i = 0; i < Commons.NUMBER_OF_ALIENS_TO_DESTROY; i++) {
-            for (int j = 0; j < 3; j++) {
-                var alien = new Alien(Commons.ALIEN_INIT_X + 25 * j,
-                        Commons.ALIEN_INIT_Y + 30 * i);
-                aliens.add(alien);
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                if(i == 0){
+                    var alien = new BossAlien(Commons.ALIEN_INIT_X + 80 * j,
+                                              Commons.ALIEN_INIT_Y + 50 * i);
+                    aliens.add(alien);
+                }else {
+                    var alien = new Alien(Commons.ALIEN_INIT_X + 80 * j,
+                            Commons.ALIEN_INIT_Y + 50 * i);
+                    aliens.add(alien);
+                }
             }
         }
         System.out.println("Oleada " + currentWave + " creada con " + aliens.size() + " enemigos");
@@ -335,7 +338,7 @@ public class Board extends JPanel {
                         deaths++;
 
                         // Actualizar puntuación
-                        score += SCORE_PER_KILL;
+                        score += alien.getPoints();
                         System.out.println("Alien eliminado. Nuevo score: " + score);
                         checkPowerUpDrop(alienX, alienY);
 
@@ -384,7 +387,7 @@ public class Board extends JPanel {
                         deaths++;
 
                         // Actualizar puntuación
-                        score += SCORE_PER_KILL;
+                        score += alien.getPoints();
                         System.out.println("Alien eliminado por segunda bala. Nuevo score: " + score);
                         checkPowerUpDrop(alienX, alienY);
 
@@ -514,6 +517,17 @@ public class Board extends JPanel {
             String livesText = "Vidas extra: " + player.getExtraLives();
             g.drawString(livesText, 20, 60);
         }
+        String waveinfo = "Oleada: "+currentWave+"/"+Waves;
+        g.drawString(waveinfo, 20, 90);
+
+        int remAliens = 0;
+        for(Alien alien:aliens){
+            if(alien.isVisible()){
+                remAliens++;
+            }
+        }
+        String aliensText = "Enemigos restantes: "+remAliens;
+        g.drawString(aliensText,20,120);
     }
 
     private void checkPowerUpDrop(int alienX, int alienY) {
@@ -674,6 +688,9 @@ public class Board extends JPanel {
             restartButton.setVisible(true);
             System.out.println("¡Juego completado! Todas las oleadas superadas.");
         }
+    }
+    public int getCurrentWave(){
+        return currentWave;
     }
 }
 
