@@ -24,6 +24,7 @@ public class SpaceInvaders extends JFrame {
     }
 
     public static void main(String[] args) {
+        TestRunner.runTests();
         var ex = new SpaceInvaders();
         ex.setVisible(true);
     }
