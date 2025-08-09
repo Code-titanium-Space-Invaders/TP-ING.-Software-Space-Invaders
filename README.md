@@ -1,31 +1,37 @@
-👾 Space Invaders - Versión Mejorada con Power-Ups
+👾 Space Invaders – Enhanced Version with Power-Ups
 
-Este proyecto es una adaptación del clásico videojuego "Space Invaders", 
-desarrollado en Java utilizando JavaFX, como parte del trabajo práctico para la materia Ingeniería en Software.
-El juego base fue tomado de un repositorio en GitHub y se le incorporaron funcionalidades nuevas para mejorar la jugabilidad.
+This project is an adaptation of the classic video game Space Invaders, developed in Java using JavaFX, as part of the coursework for the Software Engineering subject. The base game was taken from a GitHub repository (https://github.com/janbodnar/Java-Space-Invaders) and enhanced with new functionalities to improve gameplay.
 
--Descripción del juego
+— Game Description
 
-El jugador controla una nave espacial que debe eliminar oleadas de enemigos descendentes antes de que lleguen al suelo. 
-En esta versión se agregaron power-ups que aparecen aleatoriamente durante la partida y otorgan beneficios temporales al jugador.
+The player controls a spaceship that must eliminate waves of descending enemies before they reach the ground. In this version, power-ups appear randomly during the match and grant the player temporary benefits.
 
--Mejoras implementadas (Power-ups) 
+— Implemented Improvements (Power-Ups)
 
---Disparo rápido: duplica la velocidad de disparo por 5 segundos.  
---Escudo temporal: protege de un impacto enemigo sin perder una vida.  
---Disparo doble: permite lanzar dos disparos a la vez por tiempo limitado.  
---Bomba de área: destruye todos los enemigos en pantalla.  
---Vida extra: restaura una vida del jugador al instante.
+Rapid Fire: Doubles the firing speed for 5 seconds.
 
--Interfaz Grafica
+Temporary Shield: Protects from one enemy hit without losing a life.
 
---Cambio de relacion aspecto
---Mejora grafica a los elementos
---Cambio en la interfaz de usuario
---Implementacion de un Menu Principal
+Double Shot: Allows firing two shots at once for a limited time.
 
--Tecnologías utilizadas
+Area Bomb: Destroys all enemies on the screen.
 
---Lenguaje:Java  
---Motor gráfico:JavaFX  
---IDE:IntelliJ IDEA
+Extra Life: Instantly restores one player life.
+
+— Graphical Interface
+
+Changed aspect ratio
+
+Improved graphics for game elements
+
+Updated user interface
+
+Added Main Menu
+
+— Technologies Used
+
+Language: Java
+
+Graphics Engine: JavaFX
+
+IDE: IntelliJ IDEA
