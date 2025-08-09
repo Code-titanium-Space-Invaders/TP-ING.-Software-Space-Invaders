@@ -29,8 +29,3 @@ En esta versión se agregaron power-ups que aparecen aleatoriamente durante la p
 --Lenguaje:Java  
 --Motor gráfico:JavaFX  
 --IDE:IntelliJ IDEA
-
-
-
-▶️ Cómo ejecutar el juego
-
